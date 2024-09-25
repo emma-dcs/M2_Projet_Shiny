@@ -1,1 +1,36 @@
-description du jeu de données
+
+- Il faut utiliser fread pour importer les données au lieu de read.table
+- Il faut utiliser data.table ou dplyr (data.table c'est mieux)
+
+Etapes pour le projet :
+1)	Réfléchir aux données, décrire le jeu de données et choisir des calculs à faire
+2)	Sur R : faire des fonctions pour renvoyer les résultats qu’on veut (faire tout le code d’abord sur R) et vérifier que tout fonctionne (document "Code R.R")
+3)	Faire l’application (dossier "app Shiny"): 
+a.	Remettre le code déjà fait sur R
+b.	Diviser le code en plusieurs scripts (un par onglet). Exemple : un pour un graphique, un pour une table…
+
+Mail 1 :
+L’application devra comporter à minima une première partie « descriptive » sur les données.
+une seconde avec des analyses plus poussées identifiés avec votre curiosité incroyable alimentée par le potentiel de vos données.
+ 
+Nous ne jugerons pas en priorité les résultats statistiques obtenus mais plutôt la démarche et les développements réalisés.
+ 
+Nous aurons une session de travail réservée le vendredi 27 septembre après-midi. 
+Si vous avez avancé d'ici là, je pourrai vous aider / challenger l'existant. Dans le cas contraire, je ne pourrai rien pour vous.
+
+
+Les soutenances auront lieu à priori le mardi 8 octobre après-midi :
+•             Démarche du projet / données / démo
+•             Support(s) libre(s) (uniquement démo, ou slides en plus, …)
+•             Temps de présentation : 15 min (attention c’est relativement court). Il faudra bien être dans les temps au risque de se faire couper…
+•             Livraison des codes sources du projet dans la foulée. Le projet est à réaliser directement sur github. Il suffira donc de nous partager l’adresse du repository.
+
+Mail 2 : 
+L’application devra donc comporter à minima deux parties :
+
+une première partie « descriptive » sur les données. Dans cette partie, l’idée est de pouvoir permettre à l’utilisateur de regarder & de faire une 1ère analyses descriptives des données. (graphiques univariés, bi-variés, séries temporelles, cartes, … en fonction de vos données).
+une seconde avec une analyse un peu plus poussée en fonction de vos données, analyse qui est la raison du développement de cette application pour des utilisateurs extérieurs. (Clustering, modèle prédictif, comparaisons de sous-populations, …)
+ 
+Je rappelle que nous ne jugerons pas en priorité les résultats statistiques obtenus mais plutôt la démarche, la réflexion autour des données et de leurs potentielles et les développements réalisés.
+
+Il faut également se mettre à la place d’un futur utilisateur potentiel : qu’aimerait-il apprendre de ces données ? Comment pouvons-nous lui faciliter son « parcours utilisateur » ?
