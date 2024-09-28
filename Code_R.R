@@ -10,7 +10,7 @@ print(na_counts)
 
 
 # suppression des colonnes inutiles :
-# CountryID
+# CountryID (car une autre colonne contient les noms des pays)
 # AMA exchange rate (car identique a IMF based exchange rate)
 # changes in inventories (car il n'y a pas de données)
 
@@ -41,7 +41,6 @@ economy <- economy %>%
 print(economy)
 
 ###Obtenir les coordonnées de chaque pays
-library(dplyr)
 library(rnaturalearth)
 library(sf)
 
@@ -117,4 +116,57 @@ if (nrow(na_rows) > 0) {
   print("Aucun NA trouvé dans lon et lat.")
 }
 ###il manque la position pour la Yugoslavie, Czechoslovakia et USSR
+
+
+# ajout des coordonnées pour ces 3 pays qui n'existent plus 
+# Ajouter les coordonnées manquantes pour Yugoslavie, Czechoslovakia, et USSR
+economy$lon[economy$Pays == "Yugoslavie"] <- 20.4633
+economy$lat[economy$Pays == "Yugoslavie"] <- 44.8176
+
+economy$lon[economy$Pays == "Czechoslovakia"] <- 14.4378
+economy$lat[economy$Pays == "Czechoslovakia"] <- 50.0755
+
+economy$lon[economy$Pays == "USSR"] <- 37.6173
+economy$lat[economy$Pays == "USSR"] <- 55.7558
+
+economy$lon[economy$Pays == "France"] <- 1.8883
+economy$lat[economy$Pays == "France"] <- 46.6034
+
+
+# Vérifier les coordonnées ajoutées pour ces pays
+economy[economy$Pays %in% c("Yugoslavie", "Czechoslovakia", "USSR"), ]
+
+
+
+
+# Créer une carte simple pour visualiser les pays du jeu de données ######################################################################
+#installer le package "htmlwidgets", "devtools", "leaflet", "dplyder" ##############################################
+
+library(dplyr)
+library(leaflet)
+
+#enlever la colonne geometry
+economy <- economy[, -26]
+head(economy)
+
+# Garder la première occurrence de chaque pays
+economy_pays <- economy %>%
+  group_by(Pays) %>%
+  slice(1) # ou slice(n()) pour la dernière occurrence
+
+
+# Créer la carte avec un seul marqueur par pays
+
+leaflet(economy_pays) %>%
+  addTiles() %>%
+  addMarkers(~lon, ~lat, popup = ~Pays)
+
+
+###############################################################################################"
+
+
+
+
+
+
 
