@@ -39,3 +39,82 @@ economy <- economy %>%
          VA_construction, VA_manufacture, VA_public, VA_transp, VA_autre)
 
 print(economy)
+
+###Obtenir les coordonnées de chaque pays
+library(dplyr)
+library(rnaturalearth)
+library(sf)
+
+#Nettoyer les données de la colonne pays 
+economy <- economy %>%
+  mutate(Pays = gsub("\\s*\\(.*?\\)", "", Pays))
+
+# Charger les données géographiques des pays
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Calculer les centroïdes et extraire les coordonnées
+world$centroid <- st_centroid(world$geometry)
+world_coords <- world %>%
+  mutate(lon = st_coordinates(centroid)[, 1],
+         lat = st_coordinates(centroid)[, 2]) %>%
+  select(subunit, sovereignt, admin, geounit, name, name_long, brk_name, formal_en, lon, lat)  # Garder uniquement les colonnes nécessaires
+
+# Vérifier les noms des pays dans le jeu de données
+economy <- economy %>%
+  mutate(Pays = ifelse(Pays == "D.R. of the Congo", "Democratic Republic of the Congo", Pays)) %>%
+  mutate(Pays = ifelse(Pays == "State of Palestine", "Palestine", Pays)) %>%
+  mutate(Pays = ifelse(Pays == " China, Hong Kong SAR ", "Hong Kong", Pays))%>%
+  mutate(Pays = ifelse(Pays == "D.P.R. of Korea", "Democratic People's Republic of Korea", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Lao People's DR", "Laos", Pays))%>%
+  mutate(Pays = ifelse(Pays == " China, Macao SAR ", "Macao", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Former Netherlands Antilles", "Sint Maarten", Pays))%>%
+  mutate(Pays = ifelse(Pays == "St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Viet Nam", "Vietnam", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Eswatini", "eSwatini", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Türkiye", "Turkey", Pays))%>%
+  mutate(Pays = ifelse(Pays == "U.R. of Tanzania: Mainland", "Tanzania", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Yemen Democratic", "Yemen", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Yemen Arab Republic", "Yemen", Pays))%>%
+  mutate(Pays = ifelse(Pays == "Zanzibar", "Tanzania", Pays))
+
+
+# Initialiser un data frame pour conserver les coordonnées
+coordinates <- data.frame()
+
+#jointure unique
+coordinates <- economy %>%
+  left_join(world_coords %>% select(subunit, lon, lat), by = c("Pays" = "subunit"))%>%
+  left_join(world_coords %>% select(name, lon, lat), by = c("Pays" = "name"))%>%
+  left_join(world_coords %>% select(sovereignt, lon, lat), by = c("Pays" = "sovereignt"))%>%
+  left_join(world_coords %>% select(admin, lon, lat), by = c("Pays" = "admin"))%>%
+  left_join(world_coords %>% select(geounit, lon, lat), by = c("Pays" = "geounit"))%>%
+  left_join(world_coords %>% select(name_long, lon, lat), by = c("Pays" = "name_long"))%>%
+  left_join(world_coords %>% select(brk_name, lon, lat), by = c("Pays" = "brk_name"))%>%
+  left_join(world_coords %>% select(formal_en, lon, lat), by = c("Pays" = "formal_en"))%>%
+  mutate(
+  lon = coalesce(lon.x, lon.y, lon.x.x, lon.y.y, lon.x.x.x, lon.y.y.y, lon.x.x.x.x, lon.y.y.y.y),
+  lat = coalesce(lat.x, lat.y, lat.x.x, lat.y.y, lat.x.x.x, lat.y.y.y, lat.x.x.x.x, lat.y.y.y.y),
+  geometry = coalesce(geometry.x, geometry.y, geometry.x.x, geometry.y.y, geometry.x.x.x, geometry.y.y.y, geometry.x.x.x.x, geometry.y.y.y.y)
+  ) %>%
+  # Retirer les colonnes temporaires
+  select(-matches("^lon\\.|^lat\\.|^geometry\\."))
+
+
+# Ne garder que les colonnes du jeu de données economy avec lon et lat, (geometry ?)
+economy <- coordinates %>%
+  select(everything(), lon, lat, geometry)
+
+# Identifier les lignes où lon et lat sont NA
+na_rows <- economy %>%
+  filter(is.na(lon) | is.na(lat)) %>%
+  select(1)  
+
+# Afficher les résultats
+if (nrow(na_rows) > 0) {
+  print("Les lignes avec des NA dans lon ou lat correspondent aux pays suivants :")
+  print(na_rows)
+} else {
+  print("Aucun NA trouvé dans lon et lat.")
+}
+###il manque la position pour la Yugoslavie, Czechoslovakia et USSR
+
