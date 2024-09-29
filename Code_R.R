@@ -96,12 +96,13 @@ coordinates <- economy %>%
   geometry = coalesce(geometry.x, geometry.y, geometry.x.x, geometry.y.y, geometry.x.x.x, geometry.y.y.y, geometry.x.x.x.x, geometry.y.y.y.y)
   ) %>%
   # Retirer les colonnes temporaires
-  select(-matches("^lon\\.|^lat\\.|^geometry\\."))
+  select(-matches("^lon\\.|^lat\\.|^geometry\\.")) %>%
+  select(-geometry)
 
 
-# Ne garder que les colonnes du jeu de données economy avec lon et lat, (geometry ?)
+# Ne garder que les colonnes du jeu de données economy avec lon et lat
 economy <- coordinates %>%
-  select(everything(), lon, lat, geometry)
+  select(everything(), lon, lat)
 
 # Identifier les lignes où lon et lat sont NA
 na_rows <- economy %>%
@@ -141,13 +142,7 @@ economy[economy$Pays %in% c("Yugoslavie", "Czechoslovakia", "USSR"), ]
 
 # Créer une carte simple pour visualiser les pays du jeu de données ######################################################################
 #installer le package "htmlwidgets", "devtools", "leaflet", "dplyder" ##############################################
-
-library(dplyr)
 library(leaflet)
-
-#enlever la colonne geometry
-economy <- economy[, -26]
-head(economy)
 
 # Garder la première occurrence de chaque pays
 economy_pays <- economy %>%
