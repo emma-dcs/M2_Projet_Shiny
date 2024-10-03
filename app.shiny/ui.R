@@ -11,27 +11,27 @@ library(shiny)
 
 # Define UI for application that draws a histogram
 fluidPage(
-
-    # Application title
-    titlePanel("premiers pas avec shiny"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30),
-            selectInput(inputId = "color", label = "Couleur :",
-                        choices = c("Rouge" = "red", "Vert" = "green", "Bleu" = "blue")),
-            textInput("title", "Titre :", "Histogramme")
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot"),
-            verbatimTextOutput("summary")
-        )
+  titlePanel("Visualisation des indicateurs économiques"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("country", "Choisissez un pays :", choices = unique(economy$Pays)),
+      selectInput("variable", "Choisissez une variable :", 
+                  choices = c("PIB", "RNB", "Population", "Taux_change", 
+                              "Capital", "Exportation", "Importation")),
+      selectInput("chartType", "Type de visualisation :", 
+                  choices = c("Graphique temporel", "Carte avec Leaflet"))
+    ),
+    
+    mainPanel(
+      conditionalPanel(
+        condition = "input.chartType == 'Graphique temporel'",
+        plotOutput("timePlot")
+      ),
+      conditionalPanel(
+        condition = "input.chartType == 'Carte avec Leaflet'",
+        leafletOutput("map", height = 600)  # Espace réservé pour la carte
+      )
     )
+  )
 )
