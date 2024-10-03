@@ -116,13 +116,13 @@ if (nrow(na_rows) > 0) {
 } else {
   print("Aucun NA trouvé dans lon et lat.")
 }
-###il manque la position pour la Yugoslavie, Czechoslovakia et USSR
 
 
-# ajout des coordonnées pour ces 3 pays qui n'existent plus 
+
+
 # Ajouter les coordonnées manquantes pour Yugoslavie, Czechoslovakia, et USSR
-economy$lon[economy$Pays == "Yugoslavie"] <- 20.4633
-economy$lat[economy$Pays == "Yugoslavie"] <- 44.8176
+economy$lon[economy$Pays == "Yugoslavia"] <- 20.4633
+economy$lat[economy$Pays == "Yugoslavia"] <- 44.8176
 
 economy$lon[economy$Pays == "Czechoslovakia"] <- 14.4378
 economy$lat[economy$Pays == "Czechoslovakia"] <- 50.0755
@@ -135,7 +135,7 @@ economy$lat[economy$Pays == "France"] <- 46.6034
 
 
 # Vérifier les coordonnées ajoutées pour ces pays
-economy[economy$Pays %in% c("Yugoslavie", "Czechoslovakia", "USSR"), ]
+economy[economy$Pays %in% c("Yugoslavia", "Czechoslovakia", "USSR"), ]
 
 
 
@@ -159,10 +159,25 @@ leaflet(economy_pays) %>%
 
 
 ###############################################################################################"
+ 
 
+#remotes::install_github("JohnCoene/packer")
+#packer::npm_install()
+#packer::bundle()
 
+remotes::install_github("dreamRs/topogram")
+library(topogram)
+library(sf)
 
-
-
-
-
+economy_sf <- st_as_sf(economy, coords = c("lon", "lat"), crs = 4326)
+economy_mercator <- st_transform(economy_sf, crs = 3857)
+topogram(
+  sfobj = economy_mercator,
+  value = "Population",
+  label = "{Pays}: {Population}",
+  palette = "Blues",
+  width = 400,
+  height = 200
+)
+#il faudra permettre à l'utilisateur de changer la valeur de value
+# et de modifier le Texte pour l'info-bulle
