@@ -149,6 +149,7 @@ economy_pays <- economy %>%
   group_by(Pays) %>%
   slice(1) # ou slice(n()) pour la dernière occurrence
 
+library(ggplot2)
 
 # Créer la carte avec un seul marqueur par pays
 
