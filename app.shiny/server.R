@@ -57,6 +57,52 @@ function(input, output, session) {
                 title = paste(var_selected, "(USD)"),
                 opacity = 1)
   })
+  
+  
+  topogram <- function(sfobj, value, label, palette) {
+    ggplot(data = sfobj) +
+      geom_sf(aes(fill = !!sym(value)), color = "white") +
+      scale_fill_viridis_c(option = palette, name = value) +
+      geom_sf_text(aes(label = !!sym(label)), size = 3, na.rm = TRUE) +  # Ajout des labels
+      theme_minimal() +
+      theme(
+        legend.position = "bottom",
+        plot.margin = margin(10, 10, 10, 10)
+      ) +
+      labs(title = paste("Topogram de", value, "par pays"), x = NULL, y = NULL)
+  }
+  
+  # Charger et préparer les données sf avec des coordonnées valides
+  economy_sf <- reactive({
+    economy %>%
+      filter(!is.na(lon) & !is.na(lat)) %>%  # Suppression des NA dans les coordonnées
+      st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+      st_transform(crs = 3857)  # Transformation en projection Mercator
+  })
+  
+  # Générer le topogram et l'afficher
+  output$topogramPlot <- renderPlot({
+    # Récupérer les variables sélectionnées
+    var_selected <- input$variable
+    palette_selected <- input$palette
+    
+    # Préparation des données pour le topogram
+    economy_sf_data <- economy_sf() %>%
+      filter(!is.na(!!sym(var_selected)))  # Filtrer les données manquantes pour la variable sélectionnée
+    
+    # Générer le topogram
+    topogram_obj <- topogram(
+      sfobj = economy_sf_data,
+      value = var_selected,
+      label = "Pays",
+      palette = palette_selected
+    )
+    
+    # Afficher le topogram
+    plot(topogram_obj)
+  })
+  
+
 }
 
 
