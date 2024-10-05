@@ -19,8 +19,10 @@ fluidPage(
       selectInput("variable", "Choisissez une variable :", 
                   choices = c("PIB", "RNB", "Population", "Taux_change", 
                               "Capital", "Exportation", "Importation")),
+      selectInput("palette", "Choisissez une palette:", 
+                  choices = c("viridis", "magma", "plasma", "inferno", "cividis")),
       selectInput("chartType", "Type de visualisation :", 
-                  choices = c("Graphique temporel", "Carte avec Leaflet"))
+                  choices = c("Graphique temporel", "Carte avec Leaflet", "Topogram"))
     ),
     
     mainPanel(
@@ -31,6 +33,10 @@ fluidPage(
       conditionalPanel(
         condition = "input.chartType == 'Carte avec Leaflet'",
         leafletOutput("map", height = 600)  # Espace réservé pour la carte
+      ),
+      conditionalPanel(
+        condition = "input.chartType == 'Topogram'",
+        plotOutput("topogramPlot")  # Espace réservé pour le topogram
       )
     )
   )
