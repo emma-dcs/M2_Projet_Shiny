@@ -1,13 +1,24 @@
 library(shiny)
+library(readr)
 library(data.table)
 library(dplyr)
 library(rnaturalearth)
 library(sf)
 library(leaflet)
 library(ggplot2)
+library(topogram)
+library(sf)
+library(stringi)
+library(sf)
+library(ggplot2)
+library(gridExtra)
+library(viridis)
+library(dplyr)
+library(rlang)
+
 
 # Charger les données CSV
-economy <- fread("Glob_Economy_Ind.csv", sep = ",", header = TRUE)
+economy <- read_csv("Glob_Economy_Ind.csv")
 
 
 ###Nettoyage du jeu de données :
@@ -57,10 +68,10 @@ world_coords <- world %>%
 economy <- economy %>%
   mutate(Pays = ifelse(Pays == "D.R. of the Congo", "Democratic Republic of the Congo", Pays)) %>%
   mutate(Pays = ifelse(Pays == "State of Palestine", "Palestine", Pays)) %>%
-  mutate(Pays = ifelse(Pays == " China, Hong Kong SAR ", "Hong Kong", Pays))%>%
+  mutate(Pays = ifelse(Pays == "China, Hong Kong SAR", "Hong Kong", Pays))%>%
   mutate(Pays = ifelse(Pays == "D.P.R. of Korea", "Democratic People's Republic of Korea", Pays))%>%
   mutate(Pays = ifelse(Pays == "Lao People's DR", "Laos", Pays))%>%
-  mutate(Pays = ifelse(Pays == " China, Macao SAR ", "Macao", Pays))%>%
+  mutate(Pays = ifelse(Pays == "China, Macao SAR", "Macao", Pays))%>%
   mutate(Pays = ifelse(Pays == "Former Netherlands Antilles", "Sint Maarten", Pays))%>%
   mutate(Pays = ifelse(Pays == "St. Vincent and the Grenadines", "Saint Vincent and the Grenadines", Pays))%>%
   mutate(Pays = ifelse(Pays == "Viet Nam", "Vietnam", Pays))%>%
@@ -76,14 +87,14 @@ coordinates <- data.frame()
 
 #Jointure unique
 coordinates <- economy %>%
-  left_join(world_coords %>% select(subunit, lon, lat), by = c("Pays" = "subunit"))%>%
-  left_join(world_coords %>% select(name, lon, lat), by = c("Pays" = "name"))%>%
-  left_join(world_coords %>% select(sovereignt, lon, lat), by = c("Pays" = "sovereignt"))%>%
-  left_join(world_coords %>% select(admin, lon, lat), by = c("Pays" = "admin"))%>%
-  left_join(world_coords %>% select(geounit, lon, lat), by = c("Pays" = "geounit"))%>%
-  left_join(world_coords %>% select(name_long, lon, lat), by = c("Pays" = "name_long"))%>%
-  left_join(world_coords %>% select(brk_name, lon, lat), by = c("Pays" = "brk_name"))%>%
-  left_join(world_coords %>% select(formal_en, lon, lat), by = c("Pays" = "formal_en"))%>%
+  left_join(world_coords %>% select(subunit, lon, lat), by = c("Pays" = "subunit"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(name, lon, lat), by = c("Pays" = "name"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(sovereignt, lon, lat), by = c("Pays" = "sovereignt"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(admin, lon, lat), by = c("Pays" = "admin"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(geounit, lon, lat), by = c("Pays" = "geounit"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(name_long, lon, lat), by = c("Pays" = "name_long"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(brk_name, lon, lat), by = c("Pays" = "brk_name"), relationship = "many-to-many")%>%
+  left_join(world_coords %>% select(formal_en, lon, lat), by = c("Pays" = "formal_en"), relationship = "many-to-many")%>%
   mutate(
     lon = coalesce(lon.x, lon.y, lon.x.x, lon.y.y, lon.x.x.x, lon.y.y.y, lon.x.x.x.x, lon.y.y.y.y),
     lat = coalesce(lat.x, lat.y, lat.x.x, lat.y.y, lat.x.x.x, lat.y.y.y, lat.x.x.x.x, lat.y.y.y.y),
@@ -110,3 +121,10 @@ economy$lat[economy$Pays == "USSR"] <- 55.7558
 
 economy$lon[economy$Pays == "France"] <- 1.8883
 economy$lat[economy$Pays == "France"] <- 46.6034
+
+# Convertir le jeu de données en un objet sf
+economy_sf <- st_as_sf(economy, coords = c("lon", "lat"), crs = 4326)
+
+# Transformez les coordonnées en projection Mercator
+economy_mercator <- st_transform(economy_sf, crs = 3857)
+
