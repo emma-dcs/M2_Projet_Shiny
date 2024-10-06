@@ -41,14 +41,14 @@ economy$Country <- as.factor(economy$Country)
 economy$Currency <- as.factor(economy$Currency)
 
 # Modification des noms des colonnes
-colnames(economy) <- c("Pays", "Annee", "Taux_change", "Population", "Monnaie", 
+colnames(economy) <- c("Pays", "Annee", "Taux_de_change", "Population", "Monnaie", 
                        "RNB_hab", "VA_agri", "VA_construction", "Exportation", "Depense_tot", "Depense_gouv", 
                        "Capital", "Capital_fixe", "Depense_menage", "Importation", "VA_manufacture", "VA_public", "VA_autre",
-                       "VA_tot", "VA_transp", "VA_commerce", "RNB", "PIB")
+                       "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB")
 
 #Changement de l'ordre des variables
 economy <- economy %>%
-  select(Pays, Annee, Population, Monnaie, Taux_change, PIB, RNB, RNB_hab, 
+  select(Pays, Annee, Population, Monnaie, Taux_de_change, Produit_Interieur_Brut_PIB, Revenu_National_Brut_RNB, RNB_hab, 
          Capital, Capital_fixe, Exportation, Importation, Depense_tot, 
          Depense_gouv, Depense_menage, VA_tot, VA_agri, VA_commerce, 
          VA_construction, VA_manufacture, VA_public, VA_transp, VA_autre)
