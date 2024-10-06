@@ -17,6 +17,10 @@ library(viridis)
 library(dplyr)
 library(rlang)
 library(FactoMineR)
+library(tidyr)
+library(factoextra)
+library(DT)
+library(viridis)
 
 
 # Charger les données CSV
