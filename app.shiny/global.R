@@ -1,4 +1,5 @@
 library(shiny)
+library(shinydashboard)
 library(readr)
 library(data.table)
 library(dplyr)
@@ -15,6 +16,7 @@ library(gridExtra)
 library(viridis)
 library(dplyr)
 library(rlang)
+library(FactoMineR)
 
 
 # Charger les données CSV
