@@ -52,6 +52,7 @@ server <- function(input, output, session) {
     req(input$map_year)      # S'assurer qu'une année est sélectionnée
     
     economy_pays <- economy %>%
+      filter(Annee == input$map_year) %>%
       group_by(Pays) %>%
       slice(1) %>%
       filter(!is.na(lon) & !is.na(lat))
@@ -65,8 +66,20 @@ server <- function(input, output, session) {
       variable_values <- log10(variable_values + 1)  # Transformation logarithmique pour mieux répartir
     }
     
+    custom_palette <- colorRampPalette(c("blue", "yellow", "red"))(10)
     
-    palette <- colorNumeric(palette = input$map_palette, domain = economy_pays[[input$map_variable]], na.color = "transparent")
+    palette <- if (input$map_palette == "Super Dégradé") {
+      colorNumeric(
+      palette = custom_palette, 
+      domain = economy_pays[[input$map_variable]],
+      na.color = "transparent")
+    } else {
+      colorNumeric(
+        palette = input$map_palette, 
+        domain = economy_pays[[input$map_variable]], 
+        na.color = "transparent")
+    }
+                   
     
     leaflet(economy_pays) %>%
       addTiles() %>%
@@ -81,7 +94,7 @@ server <- function(input, output, session) {
                 pal = palette, 
                 values = economy_pays[[input$map_variable]],
                 title = if(input$map_variable == "Population") {
-                  "Population (millions)"
+                  "Population"
                 } else {
                   paste(input$map_variable, " (USD)")
                 },
