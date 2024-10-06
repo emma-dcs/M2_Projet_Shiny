@@ -75,6 +75,17 @@ ui <- fluidPage(
                                             
                                             # Affichage de la carte interactive
                                             leafletOutput("map")  # Carte interactive
+                                   ),
+                                   tabPanel("Graphique Bivarié", 
+                                            h4("Options de Graphique Bivarié"),
+                                            # Sélecteur pour la variable X
+                                            selectInput("var_x", "Choisissez une variable pour l'axe X :", 
+                                                        choices = c("PIB", "RNB", "Population", "Taux_change")),
+                                            # Sélecteur pour la variable Y
+                                            selectInput("var_y", "Choisissez une variable pour l'axe Y :", 
+                                                        choices = c("PIB", "RNB", "Population", "Taux_change")),
+                                            # Affichage du graphique bivarié
+                                            plotOutput("bivariatePlot")  # Graphique bivarié
                                    )
                        )
               ),
