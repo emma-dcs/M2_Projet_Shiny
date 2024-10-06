@@ -56,6 +56,16 @@ server <- function(input, output, session) {
       slice(1) %>%
       filter(!is.na(lon) & !is.na(lat))
     
+    # Test : Ajuster la palette pour mieux gérer les valeurs extrêmes
+    variable_values <- economy_pays[[input$map_variable]]
+    
+    # Option : appliquer une transformation logarithmique si les valeurs varient fortement
+    log_transform <- TRUE
+    if (log_transform) {
+      variable_values <- log10(variable_values + 1)  # Transformation logarithmique pour mieux répartir
+    }
+    
+    
     palette <- colorNumeric(palette = input$map_palette, domain = economy_pays[[input$map_variable]], na.color = "transparent")
     
     leaflet(economy_pays) %>%
@@ -67,8 +77,14 @@ server <- function(input, output, session) {
         radius = 5,
         stroke = FALSE, fillOpacity = 0.8
       ) %>%
-      addLegend("bottomright", pal = palette, values = economy_pays[[input$map_variable]],
-                title = paste(input$map_variable, "(USD)"),
+      addLegend("bottomright", 
+                pal = palette, 
+                values = economy_pays[[input$map_variable]],
+                title = if(input$map_variable == "Population") {
+                  "Population (millions)"
+                } else {
+                  paste(input$map_variable, " (USD)")
+                },
                 opacity = 1)
   })
   
