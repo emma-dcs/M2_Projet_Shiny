@@ -9,28 +9,31 @@
 
 
 
-# Assurez-vous d'avoir ces packages installés
-# install.packages("FactoMineR")
-# install.packages("factoextra")
-library(FactoMineR)
-library(factoextra)
-
-function(input, output, session) {
+server <- function(input, output, session) {
   
   # Partie descriptive (inchangée)
   country_data <- reactive({
     economy %>%
-      filter(Pays == input$country)
+      filter(Pays == input$temp_country)  # Utiliser le pays choisi dans l'onglet temporel
   })
   
   # Graphique temporel
   output$timePlot <- renderPlot({
-    var_selected <- input$variable
+    var_selected <- input$temp_variable  # Utiliser la variable choisie dans l'onglet temporel
+    
+    # Créer une palette de couleurs en fonction de la sélection de l'utilisateur
+    palette <- switch(input$temp_palette,
+                      "viridis" = viridis::viridis(1),
+                      "magma" = viridis::magma(1),
+                      "plasma" = viridis::plasma(1),
+                      "inferno" = viridis::inferno(1),
+                      "cividis" = viridis::cividis(1),
+                      "blue")  # Couleur par défaut
     
     ggplot(country_data(), aes(x = Annee, y = !!sym(var_selected), group = 1)) +
-      geom_line(color = "blue") +
-      geom_point(color = "red") +
-      labs(title = paste("Évolution de", var_selected, "pour", input$country),
+      geom_line(color = palette) +  # Appliquer la couleur de la palette
+      geom_point(color = palette) +  # Appliquer la couleur de la palette
+      labs(title = paste("Évolution de", var_selected, "pour", input$temp_country),
            x = "Année", y = var_selected) +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -38,128 +41,119 @@ function(input, output, session) {
   
   # Carte interactive avec Leaflet
   output$map <- renderLeaflet({
-    var_selected <- input$variable
+    req(input$map_variable)  # S'assurer qu'une variable de carte est sélectionnée
+    req(input$map_year)      # S'assurer qu'une année est sélectionnée
+    
     economy_pays <- economy %>%
       group_by(Pays) %>%
       slice(1) %>%
       filter(!is.na(lon) & !is.na(lat))
     
-    palette <- colorNumeric(palette = "YlOrRd", domain = economy_pays[[var_selected]], na.color = "transparent")
+    palette <- colorNumeric(palette = "YlOrRd", domain = economy_pays[[input$map_variable]], na.color = "transparent")
     
     leaflet(economy_pays) %>%
       addTiles() %>%
       addCircleMarkers(
         ~lon, ~lat,
-        popup = ~paste("Pays:", Pays, "<br>", var_selected, ":", economy_pays[[var_selected]]),
-        color = ~palette(economy_pays[[var_selected]]),
+        popup = ~paste("Pays:", Pays, "<br>", input$map_variable, ":", economy_pays[[input$map_variable]]),
+        color = ~palette(economy_pays[[input$map_variable]]),
         radius = 5,
         stroke = FALSE, fillOpacity = 0.8
       ) %>%
-      addLegend("bottomright", pal = palette, values = economy_pays[[var_selected]],
-                title = paste(var_selected, "(USD)"),
+      addLegend("bottomright", pal = palette, values = economy_pays[[input$map_variable]],
+                title = paste(input$map_variable, "(USD)"),
                 opacity = 1)
   })
   
-  # Topogram
-  output$topogramPlot <- renderPlot({
-    cartogram_data <- reactive_cartogram()
-    
-    if (is.null(cartogram_data)) return(NULL)
-    
-    ggplot(cartogram_data) +
-      geom_sf(aes(fill = .data[[input$variable]]), color = "green") +
-      scale_fill_viridis_c(option = input$palette, name = input$variable) +
-      labs(title = paste("Topogramme de", input$variable)) +
-      theme_minimal() +
-      theme(legend.position = "bottom")
-  })
-  
-  
-  
-  
-  
-  ### Partie clustering avec HCPC
+  # Partie clustering avec PCA
   observeEvent(input$run_cluster, {
     req(input$cluster_vars)  # Vérifiez que les variables de clustering sont sélectionnées
     
-    # Vérifiez que deux variables ou plus sont sélectionnées
-    if (length(input$cluster_vars) < 2) {
-      showNotification("Veuillez sélectionner au moins deux variables pour le clustering.", type = "error")
+    # Extraire les données des variables sélectionnées
+    data <- economy[, input$cluster_vars, drop = FALSE]
+    
+    # Vérifiez et nettoyez les données (supprimez les lignes avec des NA)
+    data <- na.omit(data)
+    
+    # Assurez-vous qu'il y a assez de données après nettoyage
+    if (nrow(data) < 2) {
+      showNotification("Pas assez de données après nettoyage.", type = "error")
       return(NULL)
     }
     
+    # Normaliser les données avant de faire la PCA
+    data_scaled <- scale(data)  # Normalisation
+    pca_result <- PCA(data_scaled, graph = FALSE)  # Effectuer la PCA
+    
+    # Effectuer le clustering
+    set.seed(123)  # Pour la reproductibilité
+    clusters <- kmeans(data_scaled, centers = input$num_clusters)
+    
+    # Ajouter les clusters au dataframe original
+    economy$cluster <- as.factor(clusters$cluster)  # Assurez-vous que 'cluster' est de type factor
+    
+    # Tracer les individus sur le plan principal avec des couleurs différentes
     output$clusteringPlot <- renderPlot({
-      # Extraire les données des variables sélectionnées
-      data <- economy[, input$cluster_vars, drop = FALSE]
-      
-      # Vérifiez et nettoyez les données (supprimez les lignes avec des NA)
-      data <- na.omit(data)
-      
-      # Assurez-vous qu'il y a assez de données après nettoyage
-      if (nrow(data) < 2) {
-        showNotification("Pas assez de données après nettoyage.", type = "error")
-        return(NULL)
-      }
-      
-      # Normaliser les données pour éviter que certaines variables dominent le clustering
-      data_scaled <- scale(data)
-      
-      # Appliquer la PCA
-      pca_result <- PCA(data_scaled, graph = FALSE)  # PCA sans graphique
-      
-      # Appliquer HCPC
-      hcpc_result <- HCPC(pca_result, nb.clust = input$num_clusters, graph = FALSE)
-      
-      # Visualiser les résultats de clustering
-      fviz_cluster(hcpc_result, geom = "point", ellipse.type = "convex") +
-        labs(title = paste("Clustering HCPC avec", input$num_clusters, "clusters"))
+      fviz_pca_ind(pca_result, 
+                   geom.ind = "point", 
+                   pointsize = 2, 
+                   col.ind = economy$cluster,  # Utilisez les clusters pour colorer les points
+                   title = "Représentation des individus sur le plan principal") +
+        theme_minimal() +
+        theme(plot.title = element_text(hjust = 0.5, size = 16),  # Centrer le titre
+              legend.position = "bottom", 
+              legend.title = element_blank()) +  # Enlever le titre de la légende
+        scale_color_brewer(palette = "Set1")  # Choisir une palette de couleurs pour les clusters
+    })
+    
+    # Graphique des variables PCA
+    output$pcaVarPlot <- renderPlot({
+      fviz_pca_var(pca_result, 
+                   col.var = "black",  # Couleur des flèches des variables
+                   title = "Représentation des variables sur le plan principal") +
+        theme_minimal() +
+        theme(plot.title = element_text(hjust = 0.5, size = 16))  # Centrer le titre
     })
     
     # Résumé des clusters
     output$cluster_summary <- renderTable({
-      data <- economy[, input$cluster_vars, drop = FALSE]
+      cluster_summary <- data %>%
+        mutate(cluster = economy$cluster) %>%
+        group_by(cluster) %>%
+        summarise(across(everything(), list(mean = mean, sd = sd), na.rm = TRUE))
       
-      # Vérifiez et nettoyez les données
-      data <- na.omit(data)
-      if (nrow(data) < 2) {
-        showNotification("Pas assez de données après nettoyage.", type = "error")
-        return(NULL)
-      }
-      
-      # Normaliser les données
-      data_scaled <- scale(data)
-      
-      # Appliquer la PCA
-      pca_result <- PCA(data_scaled, graph = FALSE)  # PCA sans graphique
-      
-      # Appliquer HCPC
-      hcpc_result <- HCPC(pca_result, nb.clust = input$num_clusters, graph = FALSE)
-      
-      # Créer un tableau de résumé des clusters
-      cluster_summary <- as.data.frame(hcpc_result$data.clust)
-      cluster_summary$cluster <- hcpc_result$clust
       return(cluster_summary)
     })
     
+    # Tableau des pays par cluster
     output$country_clusters <- renderTable({
-      data <- economy[, input$cluster_vars, drop = FALSE]
-      data <- na.omit(data)
+      req(economy$cluster)  # Vérifiez que la colonne cluster existe
       
-      if (nrow(data) < 2) {
-        showNotification("Pas assez de données après nettoyage.", type = "error")
-        return(NULL)
-      }
+      # Créer un tableau avec le pays et le numéro de cluster
+      data <- economy %>%
+        select(Pays, cluster) %>%
+        distinct() %>%
+        arrange(cluster)  # Trier par cluster
       
-      data_scaled <- scale(data)
-      pca_result <- PCA(data_scaled, graph = FALSE)  # PCA sans graphique
-      hcpc_result <- HCPC(pca_result, nb.clust = input$num_clusters, graph = FALSE)
+      # Créer une nouvelle colonne pour chaque pays dans les clusters
+      country_by_cluster <- data %>%
+        group_by(cluster) %>%
+        summarise(Pays = paste(Pays, collapse = ", ")) %>%
+        ungroup()
       
-      # Créer un tableau avec les pays et leurs clusters
-      cluster_results <- data.frame(Pays = economy$Pays, cluster = hcpc_result$clust)
-      return(cluster_results)
+      # Renommer les colonnes pour plus de clarté
+      colnames(country_by_cluster)[1] <- "Cluster"
+      
+      return(country_by_cluster)
     })
+    
   })
 }
+
+
+
+
+
 
 
 
