@@ -6,7 +6,7 @@ library(rnaturalearth)
 library(sf)
 library(leaflet)
 library(ggplot2)
-library(topogram)
+library(cartogram)
 library(sf)
 library(stringi)
 library(sf)
@@ -101,13 +101,12 @@ coordinates <- economy %>%
     geometry = coalesce(geometry.x, geometry.y, geometry.x.x, geometry.y.y, geometry.x.x.x, geometry.y.y.y, geometry.x.x.x.x, geometry.y.y.y.y)
   ) %>%
   # Retirer les colonnes temporaires
-  select(-matches("^lon\\.|^lat\\.|^geometry\\.")) %>%
-  select(-geometry)
+  select(-matches("^lon\\.|^lat\\.|^geometry\\."))
 
 
 # Ne garder que les colonnes du jeu de données economy avec lon et lat
 economy <- coordinates %>%
-  select(everything(), lon, lat)
+  select(everything(), lon, lat, geometry)
 
 # Ajouter les coordonnées manquantes pour Yugoslavie, Czechoslovakia, et USSR
 economy$lon[economy$Pays == "Yugoslavia"] <- 20.4633
@@ -122,9 +121,85 @@ economy$lat[economy$Pays == "USSR"] <- 55.7558
 economy$lon[economy$Pays == "France"] <- 1.8883
 economy$lat[economy$Pays == "France"] <- 46.6034
 
+economy$Pays <- as.factor(economy$Pays)
+
 # Convertir le jeu de données en un objet sf
+
+economy_sf <- economy
+#economy_sf <- ne_countries(scale = "medium", returnclass = "sf")
+
+
 economy_sf <- st_as_sf(economy, coords = c("lon", "lat"), crs = 4326)
 
 # Transformez les coordonnées en projection Mercator
 economy_mercator <- st_transform(economy_sf, crs = 3857)
 
+#calcul des centroides dans le système projeté 
+centroids <- st_point_on_surface(economy_mercator)
+
+
+#nettoyer les données 
+centroids <- centroids %>%
+  mutate(PIB = gsub("\\s*\\(.*?\\)", "", PIB))
+centroids <- centroids %>%
+  mutate(Taux_change = gsub("\\s*\\(.*?\\)", "", Taux_change))
+centroids <- centroids %>%
+  mutate(Population = gsub("\\s*\\(.*?\\)", "", Population))
+centroids <- centroids %>%
+  mutate(RNB = gsub("\\s*\\(.*?\\)", "", RNB))
+centroids <- centroids %>%
+  mutate(Capital = gsub("\\s*\\(.*?\\)", "", Capital))
+centroids <- centroids %>%
+  mutate(Exportation = gsub("\\s*\\(.*?\\)", "", Exportation))
+centroids <- centroids %>%
+  mutate(Importation = gsub("\\s*\\(.*?\\)", "", Importation))
+
+
+# Créer une nouvelle variable filtered_centroids
+filtered_centroids <- centroids
+
+filtered_centroids <- filtered_centroids %>%
+  dplyr::mutate(Population = as.numeric(Population)) %>%
+  dplyr::mutate(Taux_change = as.numeric(Taux_change)) %>%
+  dplyr::mutate(PIB = as.numeric(PIB)) %>%
+  dplyr::mutate(RNB = as.numeric(RNB)) %>%
+  dplyr::mutate(Capital = as.numeric(Capital)) %>%
+  dplyr::mutate(Exportation = as.numeric(Exportation)) %>%
+  dplyr::mutate(Importation = as.numeric(Importation))
+
+#nettoyer les données 
+filtered_centroids <- filtered_centroids %>%
+  mutate(PIB = gsub("\\s*\\(.*?\\)", "", PIB))
+filtered_centroids <- filtered_centroids %>%
+  mutate(Taux_change = gsub("\\s*\\(.*?\\)", "", Taux_change))
+filtered_centroids <- filtered_centroids %>%
+  mutate(Population = gsub("\\s*\\(.*?\\)", "", Population))
+filtered_centroids <- filtered_centroids %>%
+  mutate(RNB = gsub("\\s*\\(.*?\\)", "", RNB))
+filtered_centroids <- filtered_centroids %>%
+  mutate(Capital = gsub("\\s*\\(.*?\\)", "", Capital))
+filtered_centroids <- filtered_centroids %>%
+  mutate(Exportation = gsub("\\s*\\(.*?\\)", "", Exportation))
+filtered_centroids <- filtered_centroids %>%
+  mutate(Importation = gsub("\\s*\\(.*?\\)", "", Importation))
+
+  
+# Remplacer NA par 0 et convertir les colonnes numériques en entiers
+for (col in names(filtered_centroids)) {
+  if (is.numeric(filtered_centroids[[col]])) {
+    filtered_centroids[[col]][is.na(filtered_centroids[[col]])] <- 0
+    filtered_centroids[[col]] <- as.integer(ceiling(filtered_centroids[[col]]))
+    filtered_centroids[[col]][is.na(filtered_centroids[[col]])] <- 0
+  }
+}
+
+
+filtered_centroids <- st_as_sf(filtered_centroids, coords = c("lon", "lat"), crs = 4326)
+
+# Transformez les coordonnées en projection Mercator
+f_c <- st_transform(filtered_centroids, crs = 3857)
+
+#calcul des centroides dans le système projeté 
+filtered_centroids <- st_point_on_surface(f_c)
+
+fc <- st_transform(filtered_centroids, 26916)
