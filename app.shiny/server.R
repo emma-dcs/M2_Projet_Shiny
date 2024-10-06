@@ -33,6 +33,18 @@ server <- function(input, output, session) {
             plot.title = element_text(hjust = 0.5, size = 20))  # Centre et agrandit le titre
   })
   
+  #graphique bivarié
+  output$bivariatePlot <- renderPlot({
+    req(input$var_x, input$var_y)  # Assurez-vous que les variables sont sélectionnées
+    
+    ggplot(economy, aes_string(x = input$var_x, y = input$var_y)) +
+      geom_point(color = "blue", alpha = 0.5) +  # Points de dispersion
+      labs(title = paste("Graphique Bivarié de", input$var_y, "vs", input$var_x),
+           x = input$var_x, y = input$var_y) +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, size = 20))  # Centre le titre
+  })
+  
   
   # Carte interactive avec Leaflet
   output$map <- renderLeaflet({
