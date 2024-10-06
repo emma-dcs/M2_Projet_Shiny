@@ -71,7 +71,7 @@ ui <- fluidPage(
                                             
                                             # Ajout de la sélection pour la palette de couleurs
                                             selectInput("map_palette", "Choisissez une palette de couleurs :", 
-                                                        choices = c("YlOrRd", "Blues", "Greens", "Purples", "Reds", "BuPu", "GnBu")),
+                                                        choices = c("Super Dégradé", "YlOrRd", "Blues", "Greens", "Purples", "Reds", "BuPu", "GnBu")),
                                             
                                             # Affichage de la carte interactive
                                             leafletOutput("map")  # Carte interactive
