@@ -59,50 +59,65 @@ function(input, output, session) {
   })
   
   
-  topogram <- function(sfobj, value, label, palette) {
-    ggplot(data = sfobj) +
-      geom_sf(aes(fill = !!sym(value)), color = "white") +
-      scale_fill_viridis_c(option = palette, name = value) +
-      geom_sf_text(aes(label = !!sym(label)), size = 3, na.rm = TRUE) +  # Ajout des labels
-      theme_minimal() +
-      theme(
-        legend.position = "bottom",
-        plot.margin = margin(10, 10, 10, 10)
-      ) +
-      labs(title = paste("Topogram de", value, "par pays"), x = NULL, y = NULL)
-  }
-  
-  # Charger et préparer les données sf avec des coordonnées valides
-  economy_sf <- reactive({
-    economy %>%
-      filter(!is.na(lon) & !is.na(lat)) %>%  # Suppression des NA dans les coordonnées
-      st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
-      st_transform(crs = 3857)  # Transformation en projection Mercator
+  #topogram
+  reactive_cartogram <- reactive({
+    req(input$variable, input$year)
+    
+    stopifnot(input$variable %in% names(centroids))
+    fc <- centroids %>%
+      dplyr::filter(!is.na(centroids[[input$variable]])) %>%
+      dplyr::filter(Annee == input$year) %>%
+      slice(1)
+    
+    # Vérifier si la variable choisie est 'PIB'
+    if (input$variable == "PIB") {
+      warning("La variable PIB ne peut pas être utilisée pour le topogram. Veuillez sélectionner une autre variable.")
+      return(NULL)  # Retourner NULL pour éviter une erreur ultérieure
+    }
+    
+    # Déformez la carte en fonction de la variable choisie
+    weight_values <- fc[[input$variable]][1]
+    
+    # Vérifiez que les poids sont valides (non nuls et non NA)
+    if (any(is.na(weight_values)) || all(weight_values == 0)) {
+      stop("Les valeurs de poids sont invalides : elles ne peuvent pas être toutes nulles ou NA.")
+    }
+    
+    # Déformer la carte en fonction de la variable choisie
+    cartogram_data <- cartogram_cont(fc, weight = "Population", itermax = 5)
+    print("ici non?")
+    return(cartogram_data)
+    
+    
   })
-  
-  # Générer le topogram et l'afficher
-  output$topogramPlot <- renderPlot({
-    # Récupérer les variables sélectionnées
-    var_selected <- input$variable
-    palette_selected <- input$palette
-    
-    # Préparation des données pour le topogram
-    economy_sf_data <- economy_sf() %>%
-      filter(!is.na(!!sym(var_selected)))  # Filtrer les données manquantes pour la variable sélectionnée
-    
-    # Générer le topogram
-    topogram_obj <- topogram(
-      sfobj = economy_sf_data,
-      value = var_selected,
-      label = "Pays",
-      palette = palette_selected
-    )
-    
-    # Afficher le topogram
-    plot(topogram_obj)
-  })
-  
 
+  
+  
+  
+  # Générer et afficher le topogram
+  output$topogramPlot <- renderPlot({
+    req(input$variable, input$year)
+     
+    # Récupérer les données déformées
+    cartogram_data <- reactive_cartogram()
+    
+    # Si cartogram_data est NULL, ne pas continuer
+    if (is.null(cartogram_data)) {
+      return(NULL)  # Ne rien faire si les données sont NULL
+    }
+    
+    print("ici4")
+    
+    filtered_centroids[[input$variable]][is.na(filtered_centroids[[input$variable]])] <- 0
+    
+    # Générer le graphique avec ggplot2
+    ggplot(cartogram_data) +
+      geom_sf(aes(fill = .data[[input$variable]]), color = "green") +
+      scale_fill_viridis_c(option = input$palette, name = input$variable) +
+      labs(title = paste("Topogramme de", input$variable)) +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  })
 }
 
 

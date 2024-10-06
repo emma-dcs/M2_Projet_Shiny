@@ -22,7 +22,9 @@ fluidPage(
       selectInput("palette", "Choisissez une palette:", 
                   choices = c("viridis", "magma", "plasma", "inferno", "cividis")),
       selectInput("chartType", "Type de visualisation :", 
-                  choices = c("Graphique temporel", "Carte avec Leaflet", "Topogram"))
+                  choices = c("Graphique temporel", "Carte avec Leaflet", "Topogram")),
+      selectInput("year", "Choisissez une année :", choices = unique(economy$Annee))
+      
     ),
     
     mainPanel(
