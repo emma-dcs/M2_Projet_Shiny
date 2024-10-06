@@ -8,7 +8,6 @@
 #
 
 
-
 server <- function(input, output, session) {
   
   # Partie descriptive (inchangée)
@@ -17,27 +16,23 @@ server <- function(input, output, session) {
       filter(Pays == input$temp_country)  # Utiliser le pays choisi dans l'onglet temporel
   })
   
-  # Graphique temporel
+  #graphique temporel
   output$timePlot <- renderPlot({
     var_selected <- input$temp_variable  # Utiliser la variable choisie dans l'onglet temporel
     
-    # Créer une palette de couleurs en fonction de la sélection de l'utilisateur
-    palette <- switch(input$temp_palette,
-                      "viridis" = viridis::viridis(1),
-                      "magma" = viridis::magma(1),
-                      "plasma" = viridis::plasma(1),
-                      "inferno" = viridis::inferno(1),
-                      "cividis" = viridis::cividis(1),
-                      "blue")  # Couleur par défaut
+    # Créer la couleur en fonction de la sélection de l'utilisateur (input$temp_color)
+    color_selected <- input$temp_color  # Couleur choisie
     
     ggplot(country_data(), aes(x = Annee, y = !!sym(var_selected), group = 1)) +
-      geom_line(color = palette) +  # Appliquer la couleur de la palette
-      geom_point(color = palette) +  # Appliquer la couleur de la palette
+      geom_line(color = color_selected) +  # Appliquer la couleur de la sélection
+      geom_point(color = color_selected) +  # Appliquer la couleur de la sélection
       labs(title = paste("Évolution de", var_selected, "pour", input$temp_country),
            x = "Année", y = var_selected) +
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            plot.title = element_text(hjust = 0.5, size = 20))  # Centre et agrandit le titre
   })
+  
   
   # Carte interactive avec Leaflet
   output$map <- renderLeaflet({
@@ -49,7 +44,7 @@ server <- function(input, output, session) {
       slice(1) %>%
       filter(!is.na(lon) & !is.na(lat))
     
-    palette <- colorNumeric(palette = "YlOrRd", domain = economy_pays[[input$map_variable]], na.color = "transparent")
+    palette <- colorNumeric(palette = input$map_palette, domain = economy_pays[[input$map_variable]], na.color = "transparent")
     
     leaflet(economy_pays) %>%
       addTiles() %>%
@@ -146,9 +141,9 @@ server <- function(input, output, session) {
       
       return(country_by_cluster)
     })
-    
   })
 }
+
 
 
 
