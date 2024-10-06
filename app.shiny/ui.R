@@ -10,21 +10,36 @@
 # Partie UI
 ui <- fluidPage(
   # Titre centré avec le texte "Indicateurs économiques globaux"
-  tags$h1("Indicateurs économiques globaux", style = "text-align: center;"),
+  tags$h1("Indicateurs économiques globaux", style = "text-align: center; color: white;"),  # Couleur du texte du titre en blanc
   
-  # Application d'un style CSS pour agrandir les onglets
+  # Application d'un style CSS pour agrandir les onglets et ajouter un fond
   tags$style(HTML("
+    body {
+      background-color: #2c3e50;  /* Fond gris foncé */
+      color: white;  /* Texte en blanc */
+    }
+    
     .nav-tabs > li > a {
       font-size: 18px;  /* Augmente la taille de la police */
       padding: 10px 20px;  /* Ajuste le padding pour plus d'espace */
+      color: white;  /* Couleur du texte des onglets en blanc */
     }
+    
     .nav-tabs > li.active > a {
-      background-color: #007bff;  /* Couleur de fond pour l'onglet actif */
-      color: white;  /* Couleur du texte pour l'onglet actif */
+      background-color: #b7950b;  /* Couleur de fond dorée pour l'onglet actif */
+      color: white;  /* Couleur du texte en blanc pour l'onglet actif */
+      border-color: #b7950b;  /* Assurer la même couleur pour la bordure */
     }
+    
     .nav-tabs > li > a:hover {
-      background-color: #0056b3;  /* Couleur de fond au survol */
-      color: white;  /* Couleur du texte au survol */
+      background-color: #b7950b;  /* Couleur de fond dorée au survol */
+      color: #ffffff;  /* Couleur du texte blanche au survol */
+    }
+    
+    .tab-content {
+      background-color: #34495e;  /* Fond des panneaux gris un peu plus clair */
+      padding: 20px;  /* Espace autour des contenus */
+      border-radius: 8px;  /* Coins arrondis */
     }
   ")),
   
@@ -35,11 +50,13 @@ ui <- fluidPage(
                        tabsetPanel(type = "tabs", 
                                    tabPanel("Données Temporelles", 
                                             # Options pour le graphique temporel
-                                            selectInput("temp_country", "Choisissez un pays :", choices = unique(economy$Pays)),
+                                            selectInput("temp_country", "Choisissez un pays :", choices = sort(unique(economy$Pays))),
                                             selectInput("temp_variable", "Choisissez une variable :", 
-                                                        choices = c("PIB", "RNB", "Population", "Taux_change")),  # Variables mises à jour
-                                            selectInput("temp_palette", "Choisissez une palette:", 
-                                                        choices = c("viridis", "magma", "plasma", "inferno", "cividis")),
+                                                        # Liste complète des variables pour la visualisation
+                                                        choices = c("PIB", "RNB", "Population", "Taux_change", 
+                                                                    "Capital", "Exportation", "Importation")),
+                                            selectInput("temp_color", "Choisissez une couleur :", 
+                                                        choices = c("yellow", "purple", "green", "blue", "red", "black", "orange", "pink")),
                                             
                                             # Affichage du graphique temporel
                                             plotOutput("timePlot")  # Graphique temporel
@@ -47,17 +64,25 @@ ui <- fluidPage(
                                    tabPanel("Carte", 
                                             # Ajout des sélections pour la variable et l'année
                                             selectInput("map_variable", "Choisissez une variable :", 
-                                                        choices = c("PIB", "RNB", "Population", "Taux_change")),  # Variables mises à jour
+                                                        # Liste complète des variables pour la carte
+                                                        choices = c("PIB", "RNB", "Population", "Taux_change", 
+                                                                    "Capital", "Exportation", "Importation")),
                                             selectInput("map_year", "Choisissez une année :", choices = unique(economy$Annee)),
+                                            
+                                            # Ajout de la sélection pour la palette de couleurs
+                                            selectInput("map_palette", "Choisissez une palette de couleurs :", 
+                                                        choices = c("YlOrRd", "Blues", "Greens", "Purples", "Reds", "BuPu", "GnBu")),
+                                            
+                                            # Affichage de la carte interactive
                                             leafletOutput("map")  # Carte interactive
                                    )
                        )
               ),
               tabPanel("Clustering", 
                        h4("Options de Clustering"),
-                       # Variables pour le clustering
+                       # Variables pour le clustering (sans "Capital", "Exportation", "Importation")
                        selectInput("cluster_vars", "Variables pour le clustering :", 
-                                   choices = c("PIB", "RNB", "Population", "Taux_change"),  # Variables mises à jour
+                                   choices = c("PIB", "RNB", "Population", "Taux_change"),  # Liste restreinte pour le clustering
                                    multiple = TRUE),
                        # Nombre de clusters
                        numericInput("num_clusters", "Nombre de clusters :", value = 3, min = 2, max = 10),
@@ -73,6 +98,7 @@ ui <- fluidPage(
               )
   )
 )
+
 
 
 
