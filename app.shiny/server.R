@@ -57,16 +57,7 @@ server <- function(input, output, session) {
       slice(1) %>%
       filter(!is.na(lon) & !is.na(lat))
     
-    # Test : Ajuster la palette pour mieux gérer les valeurs extrêmes
-    variable_values <- economy_pays[[input$map_variable]]
-    
-    # Option : appliquer une transformation logarithmique si les valeurs varient fortement
-    log_transform <- TRUE
-    if (log_transform) {
-      variable_values <- log10(variable_values + 1)  # Transformation logarithmique pour mieux répartir
-    }
-    
-    custom_palette <- colorRampPalette(c("blue", "yellow", "red"))(10)
+    custom_palette <- colorRampPalette(c("blue", "yellow", "red"))(100)
     
     palette <- if (input$map_palette == "Super Dégradé") {
       colorNumeric(
