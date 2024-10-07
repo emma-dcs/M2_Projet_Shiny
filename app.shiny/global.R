@@ -21,6 +21,7 @@ library(tidyr)
 library(factoextra)
 library(DT)
 library(viridis)
+library(plotly)
 
 
 # Charger les données CSV
