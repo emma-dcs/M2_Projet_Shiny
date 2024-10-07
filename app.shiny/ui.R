@@ -45,6 +45,50 @@ ui <- fluidPage(
   
   
   tabsetPanel(type = "tabs",
+              tabPanel("Description", 
+                       tabsetPanel(type = "tabs",
+                                   tabPanel("Description du projet", 
+                                            h2("Description du projet"),
+                                            p("Ce projet vise à explorer et visualiser des indicateurs économiques globaux à l'aide d'une application interactive développée en ", strong("R-Shiny"), ". L'application permet aux utilisateurs de :"),
+                                            tags$ul(
+                                              tags$li("explorer des données économiques pour différents pays sur plusieurs années;"),
+                                              tags$li("générer des graphiques interactifs et des cartes pour comparer les performances économiques des pays;"),
+                                              tags$li("appliquer des algorithmes de clustering pour regrouper des pays selon des indicateurs spécifiques.")
+                                            ),
+                                            p("L'objectif est de fournir un outil facile à utiliser pour l'analyse de données économiques et leur présentation visuelle.")
+                                   ),
+                                   tabPanel("Jeu de Données", 
+                                            h2("Jeu de Données"),
+                                            p("Le projet utilise le fichier ", strong("Glob_Economy_Ind.csv"), ", qui contient des indicateurs économiques clés pour différents pays. Les données couvrent la période de 1970 à 2021 et sont issues d'une source open data ", em("National Accounts Main Aggregates Database"), "."),
+                                            h3("Variables principales :"),
+                                            tags$ul(
+                                              tags$li(strong("Pays"), ": Le nom du pays."),
+                                              tags$li(strong("Annee"), ": L'année de l'enregistrement des données."),
+                                              tags$li(strong("Population"), ": Nombre d'habitants dans le pays."),
+                                              tags$li(strong("Produit Intérieur Brut (PIB)"), ": Valeur totale des biens et services produits dans le pays."),
+                                              tags$li(strong("Revenu National Brut (RNB)"), ": Revenu total généré par les résidents d'un pays."),
+                                              tags$li(strong("Taux de Change"), ": Taux de conversion de la monnaie locale en USD."),
+                                              tags$li(strong("Exportation / Importation"), ": Valeur des biens et services exportés et importés par le pays."),
+                                              tags$li(strong("Valeur Ajoutée (VA)"), ": Contribution des secteurs agricoles, industriels, et de services à l'économie.")
+                                            ),
+                                            p("Les données permettent d'explorer des variables économiques majeures et leur évolution dans le temps.")
+                                   ),
+                                   tabPanel("Fonctionnalités", 
+                                            h2("Fonctionnalités"),
+                                            h3("Visualisation Temporelle"),
+                                            p("Sélectionner un pays et un indicateur économique pour visualiser son évolution au fil du temps à l'aide de graphiques interactifs."),
+                                            
+                                            h3("Cartographie Interactive"),
+                                            p("Afficher une carte des pays en fonction d'un indicateur économique pour une année spécifique. Modifier la palette de couleurs pour ajuster l'affichage visuel des données."),
+                                            
+                                            h3("Graphique Bivarié"),
+                                            p("Comparer deux indicateurs économiques pour un pays donné sous forme de graphique de dispersion."),
+                                            
+                                            h3("Clustering"),
+                                            p("Appliquer des techniques de clustering pour regrouper les pays en fonction de plusieurs indicateurs économiques. Afficher les résultats du clustering avec un graphique PCA et un résumé des clusters.")
+                                   )
+                       )
+              ),
               tabPanel("Visualisation", 
                        # Sous-onglets pour visualisation
                        tabsetPanel(type = "tabs", 
