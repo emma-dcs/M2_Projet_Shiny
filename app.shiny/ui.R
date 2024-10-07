@@ -9,8 +9,8 @@
 
 # Partie UI
 ui <- fluidPage(
-  # Titre centré avec le texte "Indicateurs économiques globaux"
-  tags$h1("Indicateurs économiques globaux", style = "text-align: center; color: white;"),  # Couleur du texte du titre en blanc
+  # Titre centré 
+  tags$h1("Indicateurs économiques globaux", style = "text-align: center; color: white;"),
   
   # Application d'un style CSS pour agrandir les onglets et ajouter un fond
   tags$style(HTML("
@@ -43,7 +43,7 @@ ui <- fluidPage(
     }
   ")),
   
-  # Suppression du sidebarLayout pour un affichage plein écran
+  
   tabsetPanel(type = "tabs",
               tabPanel("Visualisation", 
                        # Sous-onglets pour visualisation
@@ -53,20 +53,24 @@ ui <- fluidPage(
                                             selectInput("temp_country", "Choisissez un pays :", choices = sort(unique(economy$Pays))),
                                             selectInput("temp_variable", "Choisissez une variable :", 
                                                         # Liste complète des variables pour la visualisation
-                                                        choices = c("Produit_Interieur_Brut_PIB", "Revenu_National_Brut_RNB", "Population", "Taux_de_change", 
-                                                                    "Capital", "Exportation", "Importation")),
+                                                        choices = c("Taux_de_change", "Population", "Monnaie", 
+                                                                    "RNB_hab", "VA_agri", "VA_construction", "Exportation", "Depense_tot", "Depense_gouv", 
+                                                                    "Capital", "Capital_fixe", "Depense_menage", "Importation", "VA_manufacture", "VA_public", "VA_autre",
+                                                                    "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB")),
                                             selectInput("temp_color", "Choisissez une couleur :", 
                                                         choices = c("yellow", "purple", "green", "blue", "red", "black", "orange", "pink")),
                                             
                                             # Affichage du graphique temporel
-                                            plotOutput("timePlot")  # Graphique temporel
+                                            plotOutput("timePlot")
                                    ),
                                    tabPanel("Carte", 
                                             # Ajout des sélections pour la variable et l'année
                                             selectInput("map_variable", "Choisissez une variable :", 
                                                         # Liste complète des variables pour la carte
-                                                        choices = c("Produit_Interieur_Brut_PIB", "Revenu_National_Brut_RNB", "Population", "Taux_de_change", 
-                                                                    "Capital", "Exportation", "Importation")),
+                                                        choices = c("Taux_de_change", "Population", "Monnaie", 
+                                                                    "RNB_hab", "VA_agri", "VA_construction", "Exportation", "Depense_tot", "Depense_gouv", 
+                                                                    "Capital", "Capital_fixe", "Depense_menage", "Importation", "VA_manufacture", "VA_public", "VA_autre",
+                                                                    "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB")),
                                             selectInput("map_year", "Choisissez une année :", choices = unique(economy$Annee)),
                                             
                                             # Ajout de la sélection pour la palette de couleurs
@@ -74,18 +78,25 @@ ui <- fluidPage(
                                                         choices = c("Super Dégradé", "YlOrRd", "Blues", "Greens", "Purples", "Reds", "BuPu", "GnBu")),
                                             
                                             # Affichage de la carte interactive
-                                            leafletOutput("map")  # Carte interactive
+                                            leafletOutput("map")
                                    ),
                                    tabPanel("Graphique Bivarié", 
                                             h4("Options de Graphique Bivarié"),
-                                            # Sélecteur pour la variable X
+                                            selectInput("temp_country", "Choisissez un pays :", choices = sort(unique(economy$Pays))),
+                                            # Ajout des sélections pour la variable X
                                             selectInput("var_x", "Choisissez une variable pour l'axe X :", 
-                                                        choices = c("Produit_Interieur_Brut_PIB", "Revenu_National_Brut_RNB", "Population", "Taux_de_change")),
-                                            # Sélecteur pour la variable Y
+                                                        choices = c("Annee", "Taux_de_change", "Population", "Monnaie", 
+                                                                    "RNB_hab", "VA_agri", "VA_construction", "Exportation", "Depense_tot", "Depense_gouv", 
+                                                                    "Capital", "Capital_fixe", "Depense_menage", "Importation", "VA_manufacture", "VA_public", "VA_autre",
+                                                                    "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB")),
+                                            # Ajout des sélections pour la variable Y
                                             selectInput("var_y", "Choisissez une variable pour l'axe Y :", 
-                                                        choices = c("Produit_Interieur_Brut_PIB", "Revenu_National_Brut_RNB", "Population", "Taux_de_change")),
+                                                        choices = c("Annee", "Taux_de_change", "Population", "Monnaie", 
+                                                                    "RNB_hab", "VA_agri", "VA_construction", "Exportation", "Depense_tot", "Depense_gouv", 
+                                                                    "Capital", "Capital_fixe", "Depense_menage", "Importation", "VA_manufacture", "VA_public", "VA_autre",
+                                                                    "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB")),
                                             # Affichage du graphique bivarié
-                                            plotOutput("bivariatePlot")  # Graphique bivarié
+                                            plotOutput("bivariatePlot") 
                                    )
                        )
               ),
@@ -93,7 +104,10 @@ ui <- fluidPage(
                        h4("Options de Clustering"),
                        # Variables pour le clustering (sans "Capital", "Exportation", "Importation")
                        selectInput("cluster_vars", "Variables pour le clustering :", 
-                                   choices = c("Produit_Interieur_Brut_PIB", "Revenu_National_Brut_RNB", "Population", "Taux_de_change"),  # Liste restreinte pour le clustering
+                                   choices = c("Taux_de_change", "Population", 
+                                               "RNB_hab", "VA_agri", "VA_construction", "Depense_tot", "Depense_gouv", 
+                                               "Capital_fixe", "Depense_menage", "VA_manufacture", "VA_public", "VA_autre",
+                                               "VA_tot", "VA_transp", "VA_commerce", "Revenu_National_Brut_RNB", "Produit_Interieur_Brut_PIB"),  # Liste restreinte pour le clustering
                                    multiple = TRUE),
                        # Nombre de clusters
                        numericInput("num_clusters", "Nombre de clusters :", value = 3, min = 2, max = 10),
@@ -109,22 +123,3 @@ ui <- fluidPage(
               )
   )
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
