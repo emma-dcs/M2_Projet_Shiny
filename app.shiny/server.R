@@ -10,7 +10,7 @@
 
 server <- function(input, output, session) {
   
-  # Partie descriptive (inchangée)
+  # Partie descriptive
   country_data <- reactive({
     economy %>%
       filter(Pays == input$temp_country)  # Utiliser le pays choisi dans l'onglet temporel
@@ -35,11 +35,13 @@ server <- function(input, output, session) {
   
   #graphique bivarié
   output$bivariatePlot <- renderPlot({
-    req(input$var_x, input$var_y)  # Assurez-vous que les variables sont sélectionnées
+    req(input$var_x, input$var_y, input$temp_country)
     
-    ggplot(economy, aes_string(x = input$var_x, y = input$var_y)) +
+    filtered_data <- economy[economy$Pays == input$temp_country, ]
+    
+    ggplot(filtered_data, aes_string(x = input$var_x, y = input$var_y)) +
       geom_point(color = "blue", alpha = 0.5) +  # Points de dispersion
-      labs(title = paste("Graphique Bivarié de", input$var_y, "vs", input$var_x),
+      labs(title = paste("Graphique Bivarié de", input$var_y, "vs", input$var_x, "pour le pays", input$temp_country),
            x = input$var_x, y = input$var_y) +
       theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, size = 20))  # Centre le titre
@@ -48,8 +50,8 @@ server <- function(input, output, session) {
   
   # Carte interactive avec Leaflet
   output$map <- renderLeaflet({
-    req(input$map_variable)  # S'assurer qu'une variable de carte est sélectionnée
-    req(input$map_year)      # S'assurer qu'une année est sélectionnée
+    req(input$map_variable)  
+    req(input$map_year)      
     
     economy_pays <- economy %>%
       filter(Annee == input$map_year) %>%
@@ -61,16 +63,16 @@ server <- function(input, output, session) {
     
     palette <- if (input$map_palette == "Super Dégradé") {
       colorNumeric(
-      palette = custom_palette, 
-      domain = economy_pays[[input$map_variable]],
-      na.color = "transparent")
+        palette = custom_palette, 
+        domain = economy_pays[[input$map_variable]],
+        na.color = "transparent")
     } else {
       colorNumeric(
         palette = input$map_palette, 
         domain = economy_pays[[input$map_variable]], 
         na.color = "transparent")
     }
-                   
+    
     
     leaflet(economy_pays) %>%
       addTiles() %>%
@@ -94,7 +96,7 @@ server <- function(input, output, session) {
   
   # Partie clustering avec PCA
   observeEvent(input$run_cluster, {
-    req(input$cluster_vars)  # Vérifiez que les variables de clustering sont sélectionnées
+    req(input$cluster_vars) 
     
     # Extraire les données des variables sélectionnées
     data <- economy[, input$cluster_vars, drop = FALSE]
@@ -102,7 +104,7 @@ server <- function(input, output, session) {
     # Vérifiez et nettoyez les données (supprimez les lignes avec des NA)
     data <- na.omit(data)
     
-    # Assurez-vous qu'il y a assez de données après nettoyage
+    # S'assurer qu'il y a assez de données après nettoyage
     if (nrow(data) < 2) {
       showNotification("Pas assez de données après nettoyage.", type = "error")
       return(NULL)
@@ -117,7 +119,7 @@ server <- function(input, output, session) {
     clusters <- kmeans(data_scaled, centers = input$num_clusters)
     
     # Ajouter les clusters au dataframe original
-    economy$cluster <- as.factor(clusters$cluster)  # Assurez-vous que 'cluster' est de type factor
+    economy$cluster <- as.factor(clusters$cluster)  # S'assurer que 'cluster' est de type factor
     
     # Tracer les individus sur le plan principal avec des couleurs différentes
     output$clusteringPlot <- renderPlot({
@@ -154,7 +156,7 @@ server <- function(input, output, session) {
     
     # Tableau des pays par cluster
     output$country_clusters <- renderTable({
-      req(economy$cluster)  # Vérifiez que la colonne cluster existe
+      req(economy$cluster)
       
       # Créer un tableau avec le pays et le numéro de cluster
       data <- economy %>%
@@ -175,20 +177,3 @@ server <- function(input, output, session) {
     })
   })
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
