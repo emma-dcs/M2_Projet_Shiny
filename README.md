@@ -71,3 +71,24 @@ Les données permettent d'explorer des variables économiques majeures et leur �
 -   `data` : Contient le fichier CSV des données économiques
 
 -   `README.md` : Ce fichier, expliquant le projet
+
+## Contributrices
+
+<p align="right">
+
+</p>
+
+<a href="https://github.com/maudlesage/Shiny/graphs/contributors"> ![contrib.rocks image](https://contrib.rocks/image?repo=maudlesage/Shiny)
+
+</a>
+
+</p>
+
+<!-- CONTACT -->
+
+## Contact
+
+Emma Da Costa Silva - emma.dacostasilva\@agrocampus-ouest.fr
+
+Maud Lesage - maud.lesage\@agrocampus-ouest.fr
+
